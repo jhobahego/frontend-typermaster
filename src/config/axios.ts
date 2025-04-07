@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
 import { ENV } from './env.config';
+import { toastUtilities, getApiErrorMessage } from '../utils/toast'; // Import toast utilities
 
 // Determinar la URL base según el entorno
 const baseURL = ENV.API_URL;
@@ -22,8 +23,11 @@ axiosInstance.interceptors.response.use(
   (error: AxiosError) => {
     const status = error.response?.status
     if (status) {
-    //   toastUtilities.error(getValidationError(status))
-      alert(`Error: ${status} - ${error.message}`);
+      const message = getApiErrorMessage(status, error.message);
+      toastUtilities.error(message);
+    } else {
+      // Handle network errors or errors without a status code
+      toastUtilities.error('Network Error or Server Unavailable');
     }
     return Promise.reject(error);
   }
