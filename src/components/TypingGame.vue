@@ -91,7 +91,7 @@ onMounted(() => {
 
       <textarea
         :value="store.userInput"
-        @input="e => store.handleInput((e.target as HTMLTextAreaElement).value)"
+        @input="(e: Event) => store.handleInput((e.target as HTMLTextAreaElement).value)"
         class="w-full p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
         :disabled="store.isGameFinished"
         placeholder="Start typing here..."
