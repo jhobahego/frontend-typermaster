@@ -1,26 +1,13 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import axios from 'axios';
-
-const API_URL = 'http://localhost:8000';
-
-axios.defaults.withCredentials = true;
+import { apiService } from '../services/apiService';
+import type { GameHistory } from '../types';
 
 function generateUsername() {
   const adjectives = ['Swift', 'Quick', 'Rapid', 'Nimble', 'Fast', 'Speedy'];
   const nouns = ['Typer', 'Writer', 'Racer', 'Typist', 'Scribe', 'Keymaster'];
   const randomNumber = Math.floor(Math.random() * 1000);
   return `${adjectives[Math.floor(Math.random() * adjectives.length)]}${nouns[Math.floor(Math.random() * nouns.length)]}${randomNumber}`;
-}
-
-export interface GameHistory {
-  id: number;
-  username: string;
-  wpm: number;
-  accuracy: number;
-  real_accuracy: number;
-  text: string;
-  created_at: string;
 }
 
 export const useGameStore = defineStore('game', () => {
@@ -82,8 +69,8 @@ export const useGameStore = defineStore('game', () => {
     state.value.showHistory = false;
     
     try {
-      const response = await axios.get(`${API_URL}/texts`, { withCredentials: true });
-      state.value.text = response.data.text;
+      const data = await apiService.fetchText();
+      state.value.text = data.text;
     } catch (error) {
       console.error('Error fetching text:', error);
     }
@@ -97,7 +84,7 @@ export const useGameStore = defineStore('game', () => {
     state.value.isGameStarted = false;
 
     try {
-      await axios.post(`${API_URL}/results`, {
+      await apiService.saveResults({
         username: state.value.username,
         wpm: wpm.value,
         accuracy: accuracy.value,
@@ -135,10 +122,10 @@ export const useGameStore = defineStore('game', () => {
 
   async function fetchGameHistory(page = 1) {
     try {
-      const response = await axios.get(`${API_URL}/results?page=${page}`);
-      state.value.gameHistory = response.data.results;
-      state.value.currentPage = response.data.page;
-      state.value.totalPages = response.data.total_pages;
+      const data = await apiService.fetchGameHistory(page);
+      state.value.gameHistory = data.results;
+      state.value.currentPage = data.page;
+      state.value.totalPages = data.total_pages;
     } catch (error) {
       console.error('Error fetching game history:', error);
     }
