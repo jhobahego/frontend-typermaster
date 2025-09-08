@@ -13,7 +13,8 @@ function generateUsername() {
 export const useGameStore = defineStore('game', () => {
   // State
   const state = ref({
-    text: 'The quick brown fox jumps over the lazy dog.',
+    loading: false,
+    text: '',
     userInput: '',
     startTime: 0,
     endTime: 0,
@@ -30,16 +31,16 @@ export const useGameStore = defineStore('game', () => {
 
   // Getters
   const words = computed(() => state.value.text.split(' ').length);
-  
+
   const accuracy = computed(() => {
     if (state.value.userInput.length === 0) return 0;
     let correct = 0;
     const minLength = Math.min(state.value.userInput.length, state.value.text.length);
-    
+
     for (let i = 0; i < minLength; i++) {
       if (state.value.userInput[i] === state.value.text[i]) correct++;
     }
-    
+
     return Math.round((correct / state.value.userInput.length) * 100);
   });
 
@@ -56,6 +57,7 @@ export const useGameStore = defineStore('game', () => {
 
   // Actions
   async function startGame() {
+    state.value.loading = true;
     if (!state.value.username) {
       state.value.username = generateUsername();
     }
@@ -67,18 +69,22 @@ export const useGameStore = defineStore('game', () => {
     state.value.totalKeystrokes = 0;
     state.value.correctKeystrokes = 0;
     state.value.showHistory = false;
-    
+
     try {
       const data = await apiService.fetchText();
+      console.log({ data });
       state.value.text = data.text;
     } catch (error) {
       console.error('Error fetching text:', error);
+    } finally {
+      state.value.loading = false;
     }
   }
 
   async function finishGame() {
     if (state.value.isGameFinished) return;
-    
+
+    state.value.loading = true;
     state.value.endTime = Date.now();
     state.value.isGameFinished = true;
     state.value.isGameStarted = false;
@@ -94,6 +100,8 @@ export const useGameStore = defineStore('game', () => {
       await fetchGameHistory();
     } catch (error) {
       console.error('Error saving results:', error);
+    } finally {
+      state.value.loading = false;
     }
   }
 
@@ -105,22 +113,23 @@ export const useGameStore = defineStore('game', () => {
 
   function handleInput(newValue: string) {
     if (state.value.isGameFinished) return;
-    
+
     const oldLength = state.value.userInput.length;
     const newLength = newValue.length;
-    
+
     if (newLength > oldLength) {
       state.value.totalKeystrokes++;
       if (newValue[newLength - 1] === state.value.text[newLength - 1]) {
         state.value.correctKeystrokes++;
       }
     }
-    
+
     state.value.userInput = newValue;
     checkCompletion();
   }
 
   async function fetchGameHistory(page = 1) {
+    state.value.loading = true;
     try {
       const data = await apiService.fetchGameHistory(page);
       state.value.gameHistory = data.results;
@@ -128,6 +137,9 @@ export const useGameStore = defineStore('game', () => {
       state.value.totalPages = data.total_pages;
     } catch (error) {
       console.error('Error fetching game history:', error);
+      state.value.loading = false;
+    } finally {
+      state.value.loading = false;
     }
   }
 
@@ -149,13 +161,14 @@ export const useGameStore = defineStore('game', () => {
     currentPage: computed(() => state.value.currentPage),
     totalPages: computed(() => state.value.totalPages),
     showHistory: computed(() => state.value.showHistory),
-    
+    loading: computed(() => state.value.loading),
+
     // Expose computed properties
     accuracy,
     realAccuracy,
     wpm,
     words,
-    
+
     // Expose actions
     startGame,
     finishGame,

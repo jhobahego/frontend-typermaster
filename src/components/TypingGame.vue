@@ -76,7 +76,23 @@ onMounted(() => {
       </div>
 
       <div class="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg">
-        <p class="text-xl leading-relaxed font-mono">
+        <!-- Loading skeleton while fetching text -->
+        <div v-if="store.loading" class="space-y-3">
+          <div class="animate-pulse">
+            <div class="h-6 bg-gray-300 dark:bg-gray-600 rounded w-full mb-2"></div>
+            <div class="h-6 bg-gray-300 dark:bg-gray-600 rounded w-5/6 mb-2"></div>
+            <div class="h-6 bg-gray-300 dark:bg-gray-600 rounded w-4/6 mb-2"></div>
+            <div class="h-6 bg-gray-300 dark:bg-gray-600 rounded w-3/4 mb-2"></div>
+            <div class="h-6 bg-gray-300 dark:bg-gray-600 rounded w-2/3"></div>
+          </div>
+          
+          <p class="text-center text-gray-500 dark:text-gray-400 mt-4">
+            Generando texto con IA...
+          </p>
+        </div>
+        
+        <!-- Actual text content  -->
+        <p v-else class="text-xl leading-relaxed font-mono">
           <span
             v-for="(char, index) in store.text"
             :key="index"
@@ -93,7 +109,7 @@ onMounted(() => {
         :value="store.userInput"
         @input="(e: Event) => store.handleInput((e.target as HTMLTextAreaElement).value)"
         class="w-full p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
-        :disabled="store.isGameFinished"
+        :disabled="store.isGameFinished || store.loading"
         placeholder="Start typing here..."
         rows="3"
       ></textarea>
