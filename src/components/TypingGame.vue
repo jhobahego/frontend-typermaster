@@ -11,9 +11,16 @@ onMounted(() => {
 
 <template>
   <div class="max-w-4xl mx-auto p-6">
-    <div class="flex items-center justify-center mb-8 space-x-4">
+    <div class="flex items-center justify-center mb-8 space-x-4 mt-4">
+      <button @click="store.resetGame" class="flex items-center text-2xl font-bold text-gray-800 dark:text-white mr-4">
+        <!-- svg back arrow o reset -->
+        <svg v-if="store.isGameFinished || store.isGameStarted" xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        <span v-if="store.isGameFinished || store.isGameStarted" class="-mb-2 text-gray-800 dark:text-white font-medium text-xl">Home</span>
+      </button>
       <img src="../assets/logo.svg" alt="TyperMaster Logo" class="h-12 w-12 text-blue-500" />
-      <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+      <h1 class="-mb-2 text-4xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
         TyperMaster
       </h1>
     </div>
