@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { useGameStore } from '../stores/game';
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 
 const store = useGameStore();
+const showSettings = ref(false);
 
 onMounted(() => {
   store.fetchGameHistory();
@@ -26,12 +27,18 @@ onMounted(() => {
     </div>
     
     <div v-if="store.showHistory" class="space-y-6">
-      <div class="text-center">
+      <div class="text-center space-x-4">
         <button
           @click="store.startGame"
           class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition"
         >
           Start Game
+        </button>
+        <button
+          @click="showSettings = true"
+          class="bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white px-6 py-3 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+        >
+          Settings
         </button>
       </div>
 
@@ -155,6 +162,71 @@ onMounted(() => {
         >
           Back to Home
         </button>
+      </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div v-if="showSettings" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm w-full">
+        <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Settings</h2>
+        
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Language</label>
+            <div class="flex space-x-2">
+              <button
+                @click="store.setLanguage('en')"
+                :class="[
+                  'px-4 py-2 rounded-lg flex-1 transition',
+                  store.language === 'en'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                ]"
+              >
+                English
+              </button>
+              <button
+                @click="store.setLanguage('es')"
+                :class="[
+                  'px-4 py-2 rounded-lg flex-1 transition',
+                  store.language === 'es'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                ]"
+              >
+                Spanish
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Text Length</label>
+            <div class="flex space-x-2">
+              <button
+                v-for="len in ['short', 'medium', 'long']"
+                :key="len"
+                @click="store.setLength(len)"
+                :class="[
+                  'px-3 py-2 rounded-lg flex-1 capitalize transition',
+                  store.length === len
+                    ? 'bg-purple-500 text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                ]"
+              >
+                {{ len }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 flex justify-end">
+          <button
+            @click="showSettings = false"
+            class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition"
+          >
+            Close
+          </button>
+        </div>
       </div>
     </div>
   </div>
