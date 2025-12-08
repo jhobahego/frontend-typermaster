@@ -26,7 +26,9 @@ export const useGameStore = defineStore('game', () => {
     gameHistory: [] as GameHistory[],
     currentPage: 1,
     totalPages: 1,
-    showHistory: true
+    showHistory: true,
+    language: 'en',
+    length: 'medium'
   });
 
   // Getters
@@ -71,7 +73,10 @@ export const useGameStore = defineStore('game', () => {
     state.value.showHistory = false;
 
     try {
-      const data = await apiService.fetchText();
+      const data = await apiService.fetchText({
+        language: state.value.language,
+        length: state.value.length
+      });
       console.log({ data });
       state.value.text = data.text;
     } catch (error) {
@@ -150,6 +155,14 @@ export const useGameStore = defineStore('game', () => {
     fetchGameHistory();
   }
 
+  function setLanguage(lang: string) {
+    state.value.language = lang;
+  }
+
+  function setLength(len: string) {
+    state.value.length = len;
+  }
+
   return {
     // Expose state properties
     text: computed(() => state.value.text),
@@ -162,6 +175,8 @@ export const useGameStore = defineStore('game', () => {
     totalPages: computed(() => state.value.totalPages),
     showHistory: computed(() => state.value.showHistory),
     loading: computed(() => state.value.loading),
+    language: computed(() => state.value.language),
+    length: computed(() => state.value.length),
 
     // Expose computed properties
     accuracy,
@@ -175,6 +190,8 @@ export const useGameStore = defineStore('game', () => {
     checkCompletion,
     handleInput,
     fetchGameHistory,
-    resetGame
+    resetGame,
+    setLanguage,
+    setLength
   };
 });

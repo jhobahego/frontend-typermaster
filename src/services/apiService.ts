@@ -1,8 +1,8 @@
 import axios from '../config/axios';
 
 export const apiService = {
-  async fetchText() {
-    const response = await axios.get('/texts');
+  async fetchText(options: { language: string; length: string } = { language: 'en', length: 'medium' }) {
+    const response = await axios.get(`/texts?language=${options.language}&length=${options.length}`);
     return response.data;
   },
   
