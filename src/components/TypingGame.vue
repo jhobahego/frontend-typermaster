@@ -1,13 +1,37 @@
 <script setup lang="ts">
 import { useGameStore } from '../stores/game';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 const store = useGameStore();
 const showSettings = ref(false);
+const route = useRoute();
+const router = useRouter();
 
+// Sync from URL to Store on mounted
 onMounted(() => {
+  if (route.query.language) {
+    store.setLanguage(route.query.language as string);
+  }
+  if (route.query.length) {
+    store.setLength(route.query.length as string);
+  }
   store.fetchGameHistory();
 });
+
+// Sync from Store to URL when settings change
+watch(
+  [() => store.language, () => store.length],
+  ([newLang, newLength]) => {
+    router.replace({
+      query: {
+        ...route.query,
+        language: newLang,
+        length: newLength
+      }
+    });
+  }
+);
 </script>
 
 <template>
@@ -15,29 +39,27 @@ onMounted(() => {
     <div class="flex items-center justify-center mb-8 space-x-4 mt-4">
       <button @click="store.resetGame" class="flex items-center text-2xl font-bold text-gray-800 dark:text-white mr-4">
         <!-- svg back arrow o reset -->
-        <svg v-if="store.isGameFinished || store.isGameStarted" xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg v-if="store.isGameFinished || store.isGameStarted" xmlns="http://www.w3.org/2000/svg" class="h-8 w-8"
+          fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
         </svg>
-        <span v-if="store.isGameFinished || store.isGameStarted" class="-mb-2 text-gray-800 dark:text-white font-medium text-xl">Home</span>
+        <span v-if="store.isGameFinished || store.isGameStarted"
+          class="-mb-2 text-gray-800 dark:text-white font-medium text-xl">Home</span>
       </button>
       <img src="../assets/logo.svg" alt="TyperMaster Logo" class="h-12 w-12 text-blue-500" />
       <h1 class="-mb-2 text-4xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
         TyperMaster
       </h1>
     </div>
-    
+
     <div v-if="store.showHistory" class="space-y-6">
       <div class="text-center space-x-4">
-        <button
-          @click="store.startGame"
-          class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition"
-        >
+        <button @click="store.startGame"
+          class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition">
           Start Game
         </button>
-        <button
-          @click="showSettings = true"
-          class="bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white px-6 py-3 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition"
-        >
+        <button @click="showSettings = true"
+          class="bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white px-6 py-3 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
           Settings
         </button>
       </div>
@@ -67,17 +89,12 @@ onMounted(() => {
           </table>
         </div>
         <div class="mt-4 flex justify-center space-x-2">
-          <button
-            v-for="page in store.totalPages"
-            :key="page"
-            @click="store.fetchGameHistory(page)"
-            :class="[
-              'px-3 py-1 rounded',
-              store.currentPage === page
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-200 dark:bg-gray-700'
-            ]"
-          >
+          <button v-for="page in store.totalPages" :key="page" @click="store.fetchGameHistory(page)" :class="[
+            'px-3 py-1 rounded',
+            store.currentPage === page
+              ? 'bg-blue-500 text-white'
+              : 'bg-gray-200 dark:bg-gray-700'
+          ]">
             {{ page }}
           </button>
         </div>
@@ -99,34 +116,26 @@ onMounted(() => {
             <div class="h-6 bg-gray-300 dark:bg-gray-600 rounded w-3/4 mb-2"></div>
             <div class="h-6 bg-gray-300 dark:bg-gray-600 rounded w-2/3"></div>
           </div>
-          
+
           <p class="text-center text-gray-500 dark:text-gray-400 mt-4">
             Generando texto con IA...
           </p>
         </div>
-        
+
         <!-- Actual text content  -->
         <p v-else class="text-xl leading-relaxed font-mono">
-          <span
-            v-for="(char, index) in store.text"
-            :key="index"
-            :class="{
-              'text-green-500': store.userInput[index] === char,
-              'text-red-500': store.userInput[index] !== undefined && store.userInput[index] !== char,
-              'bg-yellow-200 dark:bg-yellow-800': store.userInput.length === index
-            }"
-          >{{ char }}</span>
+          <span v-for="(char, index) in store.text" :key="index" :class="{
+            'text-green-500': store.userInput[index] === char,
+            'text-red-500': store.userInput[index] !== undefined && store.userInput[index] !== char,
+            'bg-yellow-200 dark:bg-yellow-800': store.userInput.length === index
+          }">{{ char }}</span>
         </p>
       </div>
 
-      <textarea
-        :value="store.userInput"
+      <textarea :value="store.userInput"
         @input="(e: Event) => store.handleInput((e.target as HTMLTextAreaElement).value)"
         class="w-full p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
-        :disabled="store.isGameFinished || store.loading"
-        placeholder="Start typing here..."
-        rows="3"
-      ></textarea>
+        :disabled="store.isGameFinished || store.loading" placeholder="Start typing here..." rows="3"></textarea>
     </div>
 
     <div v-if="store.isGameFinished" class="space-y-4">
@@ -150,16 +159,12 @@ onMounted(() => {
         </div>
       </div>
       <div class="flex space-x-4">
-        <button
-          @click="store.startGame"
-          class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition"
-        >
+        <button @click="store.startGame"
+          class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition">
           Play Again
         </button>
-        <button
-          @click="store.resetGame"
-          class="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition"
-        >
+        <button @click="store.resetGame"
+          class="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition">
           Back to Home
         </button>
       </div>
@@ -169,31 +174,25 @@ onMounted(() => {
     <div v-if="showSettings" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm w-full">
         <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Settings</h2>
-        
+
         <div class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Language</label>
             <div class="flex space-x-2">
-              <button
-                @click="store.setLanguage('en')"
-                :class="[
-                  'px-4 py-2 rounded-lg flex-1 transition',
-                  store.language === 'en'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                ]"
-              >
+              <button @click="store.setLanguage('en')" :class="[
+                'px-4 py-2 rounded-lg flex-1 transition',
+                store.language === 'en'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+              ]">
                 English
               </button>
-              <button
-                @click="store.setLanguage('es')"
-                :class="[
-                  'px-4 py-2 rounded-lg flex-1 transition',
-                  store.language === 'es'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                ]"
-              >
+              <button @click="store.setLanguage('es')" :class="[
+                'px-4 py-2 rounded-lg flex-1 transition',
+                store.language === 'es'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+              ]">
                 Spanish
               </button>
             </div>
@@ -202,17 +201,12 @@ onMounted(() => {
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Text Length</label>
             <div class="flex space-x-2">
-              <button
-                v-for="len in ['short', 'medium', 'long']"
-                :key="len"
-                @click="store.setLength(len)"
-                :class="[
-                  'px-3 py-2 rounded-lg flex-1 capitalize transition',
-                  store.length === len
-                    ? 'bg-purple-500 text-white'
-                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                ]"
-              >
+              <button v-for="len in ['short', 'medium', 'long']" :key="len" @click="store.setLength(len)" :class="[
+                'px-3 py-2 rounded-lg flex-1 capitalize transition',
+                store.length === len
+                  ? 'bg-purple-500 text-white'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+              ]">
                 {{ len }}
               </button>
             </div>
@@ -220,10 +214,8 @@ onMounted(() => {
         </div>
 
         <div class="mt-6 flex justify-end">
-          <button
-            @click="showSettings = false"
-            class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition"
-          >
+          <button @click="showSettings = false"
+            class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition">
             Close
           </button>
         </div>
