@@ -137,7 +137,9 @@ export const useGameStore = defineStore('game', () => {
     state.value.loading = true;
     try {
       const data = await apiService.fetchGameHistory(page);
-      state.value.gameHistory = data.results;
+      state.value.gameHistory = data.results.sort((a: GameHistory, b: GameHistory) => {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
       state.value.currentPage = data.page;
       state.value.totalPages = data.total_pages;
     } catch (error) {
