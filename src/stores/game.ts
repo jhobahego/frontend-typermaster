@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { apiService } from '../services/apiService';
+import { getRandomFallbackText } from '../data/fallbackTexts';
+import { toastUtilities } from '../utils/toast';
 import type { GameHistory } from '../types';
 
 function generateUsername() {
@@ -77,12 +79,28 @@ export const useGameStore = defineStore('game', () => {
         language: state.value.language,
         length: state.value.length
       });
-      console.log({ data });
-      state.value.text = data.text;
+
+      const rawText = data?.text;
+      const isErrorText = typeof rawText !== 'string' ||
+        !rawText.trim() ||
+        rawText.trim().toLowerCase().startsWith('error');
+
+      if (isErrorText) {
+        throw new Error(rawText || 'Text generation service returned an invalid or empty response.');
+      }
+
+      state.value.text = rawText.trim();
     } catch (error) {
-      console.error('Error fetching text:', error);
+      console.error('Text generation failed. Using offline fallback text:', error);
+      toastUtilities.info(
+        state.value.language === 'es'
+          ? 'Modo sin conexión: practicando con texto local.'
+          : 'Offline mode: practicing with local text.'
+      );
+      state.value.text = getRandomFallbackText(state.value.language, state.value.length);
     } finally {
       state.value.loading = false;
+      state.value.startTime = Date.now();
     }
   }
 
